@@ -3,27 +3,27 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>KU Trader — Gold Dashboard (RSI + SMC + News)</title>
+	<title>KU Trader — Gold Dashboard (Stochastic + SMC Multi-Timeframe)</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 	<style>
 		:root{--bg:#10141b;--panel:#171d27;--panel2:#1d2430;--line:#2a3242;--gold:#c9a227;--gold2:#e8c96a;--text:#e9e7df;--dim:#8b93a1;--up:#3fb37f;--down:#e2574c}
 		*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.5}.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}
-		
-		/* Hero Section layout adjustment */
 		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}
 		.hero-left .label{color:var(--dim);font-size:13px}
 		.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}
 		.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}
 		.src{font-size:12.5px;color:var(--dim)}
-		
-		/* แก้ไข hero-right ควบคุมขนาด Widget ให้มินิมอล ไม่ซ้อนทับกรอบล่าง */
 		.hero-right{min-width:280px;flex:1;max-width:460px;height:98px;overflow:hidden;border-radius:8px;background:rgba(0,0,0,0.15);border:1px solid var(--line)}
-		
 		h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
 		
-		/* Signal Panel Box */
+		.tf-selector-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;background:var(--panel);padding:10px 16px;border-radius:8px;border:1px solid var(--line)}
+		.tf-label{font-size:13.5px;color:var(--dim);font-weight:500}
+		.tf-btn-group{display:flex;gap:6px}
+		.tf-btn{background:var(--panel2);border:1px solid var(--line);color:var(--dim);padding:6px 14px;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s}
+		.tf-btn.active,.tf-btn:hover{background:var(--gold);color:#1a1406;border-color:var(--gold)}
+
 		.analysis-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
 		.ana-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
 		.ana-title{font-size:13px;color:var(--dim);margin-bottom:6px}
@@ -43,7 +43,6 @@
 </head>
 <body>
 <div class="wrap">
-	<!-- Hero Price Section -->
 	<div class="hero">
 		<div class="hero-left">
 			<div class="label" id="hero-label">XAU/USD — ทองคำโลก Realtime</div>
@@ -55,22 +54,32 @@
 		</div>
 	</div>
 
+	<!-- Timeframe Selector Bar -->
+	<div class="tf-selector-bar">
+		<span class="tf-label">เลือก Timeframe สำหรับวิเคราะห์ SMC & Stochastic:</span>
+		<div class="tf-btn-group">
+			<button class="tf-btn active" data-tf="1h" data-tv="60" onclick="changeTimeframe('1h', '60')">1H (รายชั่วโมง)</button>
+			<button class="tf-btn" data-tf="4h" data-tv="240" onclick="changeTimeframe('4h', '240')">4H (4 ชั่วโมง)</button>
+			<button class="tf-btn" data-tf="1d" data-tv="D" onclick="changeTimeframe('1d', 'D')">1D (รายวัน)</button>
+		</div>
+	</div>
+
 	<!-- System Signal Box -->
 	<div class="signal-box">
 		<div>
-			<div style="font-size:13px; color:var(--dim)">ข้อสรุปการวิเคราะห์ (RSI + SMC Confluence)</div>
+			<div style="font-size:13px; color:var(--dim)">ข้อสรุปการวิเคราะห์ (<span id="txt-tf-display">TF 1H</span> — Stochastic + SMC Confluence)</div>
 			<div style="font-size:20px; font-weight:700; color:var(--gold2); margin-top:4px" id="sig-action">กำลังประมวลผลสัญญาณ...</div>
 			<div style="font-size:13.5px; margin-top:4px; color:var(--text)" id="sig-detail">โปรดรอสักครู่ ระบบกำลังคำนวณโครงสร้างราคา</div>
 		</div>
 		<div class="sig-tag neutral" id="sig-badge">SYSTEM STATUS</div>
 	</div>
 
-	<!-- Indicator Analytics Cards -->
+	<!-- Indicator Analytics Cards (Stochastic Update) -->
 	<div class="analysis-grid">
 		<div class="ana-card">
-			<div class="ana-title">1. RSI Indicator (14)</div>
-			<div class="ana-value" id="val-rsi">--.--</div>
-			<div class="ana-desc" id="desc-rsi">กำลังดึงค่า RSI...</div>
+			<div class="ana-title">1. Stochastic (14, 3, 3)</div>
+			<div class="ana-value" id="val-stoch">--.--</div>
+			<div class="ana-desc" id="desc-stoch">กำลังดึงค่า Stochastic...</div>
 		</div>
 		<div class="ana-card">
 			<div class="ana-title">2. SMC Price Zone</div>
@@ -102,7 +111,7 @@
 	</section>
 
 	<section>
-		<h2>กราฟราคาแบบเรียลไทม์ (พร้อม EMA & RSI)</h2>
+		<h2>กราฟราคาแบบเรียลไทม์ (พร้อม Stochastic & EMA)</h2>
 		<div class="chart-grid">
 			<div class="card chart-card"><div class="tv-mount" id="tv-chart-mount"></div></div>
 			<div class="side-stack">
@@ -133,7 +142,7 @@
 				<div class="ref-desc">รวมข่าวทองคำสดจาก RYT9 / อินโฟเควสท์</div>
 				<div class="ref-go">เปิดหน้าข่าว →</div>
 			</a>
-			<a class="ref-card" href="https://www.forexfactory.com/calendar?day=sep14.2026" target="_blank">
+			<a class="ref-card" href="https://www.forexfactory.com/calendar?day=sep15.2026" target="_blank">
 				<div class="ref-tag">ปฏิทินเศรษฐกิจ</div>
 				<div class="ref-title">Forex Factory Calendar</div>
 				<div class="ref-desc">ตารางข่าวและตัวเลขเศรษฐกิจกระทบทองคำ</div>
@@ -153,6 +162,10 @@
 </div>
 
 <script>
+let currentTimeframe = '1h';
+let currentTvInterval = '60';
+let currentSymbol = 'OANDA:XAUUSD';
+
 function loadTV(id,src,config){
 	const m=document.getElementById(id);
 	m.innerHTML='';
@@ -171,8 +184,9 @@ function loadTV(id,src,config){
 	m.appendChild(c);
 }
 
-function refreshWidget(symbol){
-	// สลับมาใช้ Single Quote Widget แบบมินิมอล ป้องกันอาการข้อมูลซ้อนทับกรอบล่าง
+function refreshWidget(symbol, tvInterval = '60'){
+	currentSymbol = symbol;
+	
 	loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js',{
 		symbol: symbol,
 		width: "100%",
@@ -181,15 +195,42 @@ function refreshWidget(symbol){
 		locale: "th"
 	});
 
-	loadTV('tv-chart-mount','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'60',timezone:'Asia/Bangkok',theme:'dark',style:'1',locale:'th',backgroundColor:'rgba(23,29,39,1)',hide_top_toolbar:false,allow_symbol_change:true,studies:['STD;EMA','STD;RSI'],support_host:'https://www.tradingview.com'});
+	// ปรับ Indicator กราฟ TradingView เป็น Stochastic
+	loadTV('tv-chart-mount','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{
+		autosize:true,
+		symbol: symbol,
+		interval: tvInterval, 
+		timezone:'Asia/Bangkok',
+		theme:'dark',
+		style:'1',
+		locale:'th',
+		backgroundColor:'rgba(23,29,39,1)',
+		hide_top_toolbar:false,
+		allow_symbol_change:true,
+		studies:['STD;EMA','STD;Stochastic'],
+		support_host:'https://www.tradingview.com'
+	});
+
 	loadTV('tv-ta-mount','https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',{interval:'1h',width:'100%',height:400,symbol,showIntervalTabs:true,locale:'th',colorTheme:'dark'});
 	loadTV('tv-news-mount','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'symbol',symbol,colorTheme:'dark',isTransparent:true,width:'100%',height:400,locale:'th'});
+}
+
+function changeTimeframe(tf, tvInterval){
+	currentTimeframe = tf;
+	currentTvInterval = tvInterval;
+
+	document.querySelectorAll('.tf-btn').forEach(btn => {
+		btn.classList.toggle('active', btn.dataset.tf === tf);
+	});
+
+	refreshWidget(currentSymbol, currentTvInterval);
+	loadBackendData();
 }
 
 function go(symbol,label){
 	document.getElementById('hero-label').textContent=label||symbol;
 	document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.symbol===symbol));
-	refreshWidget(symbol);
+	refreshWidget(symbol, currentTvInterval);
 }
 
 function handleSearch(){
@@ -203,40 +244,37 @@ document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
 });
 
 document.getElementById('symbol-input').onkeydown=e=>{if(e.key==='Enter')handleSearch()};
-refreshWidget('OANDA:XAUUSD');
+refreshWidget('OANDA:XAUUSD', '60');
 
 async function loadBackendData(){
 	try {
-		const res = await fetch('/api/dashboard-data');
+		const res = await fetch(`/api/dashboard-data?tf=${currentTimeframe}`);
 		if(!res.ok) throw new Error('Network error');
 		const data = await res.json();
 
-		// Price Update
 		document.getElementById('val-price').textContent = data.price;
 		const chgEl = document.getElementById('val-chg');
 		chgEl.textContent = data.change;
 		chgEl.className = data.change.startsWith('+') ? 'chg up' : 'chg down';
 		document.getElementById('val-time').textContent = data.updatedAt;
 
-		// Signal Box Update
+		document.getElementById('txt-tf-display').textContent = `TF ${data.timeframe}`;
 		document.getElementById('sig-action').textContent = data.signal.action;
 		document.getElementById('sig-detail').textContent = data.signal.detail;
 		const sigBadge = document.getElementById('sig-badge');
 		sigBadge.textContent = data.signal.badge.toUpperCase();
 		sigBadge.className = `sig-tag ${data.signal.badge}`;
 
-		// RSI Card
-		document.getElementById('val-rsi').textContent = data.rsi.value;
-		document.getElementById('desc-rsi').textContent = data.rsi.status;
+		// Stochastic Rendering
+		document.getElementById('val-stoch').textContent = `%K: ${data.stochastic.k} | %D: ${data.stochastic.d}`;
+		document.getElementById('desc-stoch').textContent = `${data.stochastic.status} (${data.timeframe})`;
 
-		// SMC Cards
+		// SMC Rendering
 		document.getElementById('val-smc-zone').textContent = data.smc.zone.split(' ')[0];
 		document.getElementById('desc-smc-zone').textContent = data.smc.zone;
-
 		document.getElementById('val-smc-struct').textContent = data.smc.structure.split(' ')[0];
 		document.getElementById('desc-smc-struct').textContent = `Order Block: ${data.smc.orderBlock}`;
 
-		// News List
 		const newsContainer = document.getElementById('ai-news-list');
 		newsContainer.innerHTML = '';
 		if(data.news.length === 0){
@@ -263,7 +301,7 @@ async function loadBackendData(){
 }
 
 loadBackendData();
-setInterval(loadBackendData, 60000); // อัปเดตทุกๆ 1 นาที
+setInterval(loadBackendData, 60000);
 </script>
 </body>
 </html>
