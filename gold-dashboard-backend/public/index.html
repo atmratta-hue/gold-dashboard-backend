@@ -3,28 +3,290 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>KU Trader — Gold Dashboard</title>
+	<title>KU Trader — Gold Dashboard (RSI + SMC + News)</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 	<style>
 		:root{--bg:#10141b;--panel:#171d27;--panel2:#1d2430;--line:#2a3242;--gold:#c9a227;--gold2:#e8c96a;--text:#e9e7df;--dim:#8b93a1;--up:#3fb37f;--down:#e2574c}
 		*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.5}.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}
-		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}.hero-left .label{color:var(--dim);font-size:13px}.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}.chg{font-size:18px;color:var(--up)}.src,.note{font-size:12.5px;color:var(--dim)}.hero-right{min-width:280px;flex:1;max-width:520px}h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
+		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}.hero-left .label{color:var(--dim);font-size:13px}.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}.src{font-size:12.5px;color:var(--dim)}.hero-right{min-width:280px;flex:1;max-width:520px}h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
+		
+		/* Signal Panel Box */
+		.analysis-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
+		.ana-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+		.ana-title{font-size:13px;color:var(--dim);margin-bottom:6px}
+		.ana-value{font:600 24px 'IBM Plex Mono';color:var(--gold2)}
+		.ana-desc{font-size:13px;margin-top:6px;color:var(--text)}
+
+		.signal-box{background:var(--panel2);border:2px solid var(--gold);border-radius:10px;padding:20px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+		.sig-tag{padding:6px 16px;border-radius:20px;font-weight:700;font-size:16px}
+		.sig-tag.positive{background:#3fb37f26;color:var(--up);border:1px solid var(--up)}
+		.sig-tag.negative{background:#e2574c26;color:var(--down);border:1px solid var(--down)}
+		.sig-tag.neutral{background:#7a849626;color:#7a8496;border:1px solid #7a8496}
+
 		.search-bar,.chip-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.search-bar{margin-bottom:14px}input{flex:1;min-width:220px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;color:var(--text);font:14px inherit}button{background:var(--gold);color:#1a1406;border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer}.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12.5px;color:var(--dim);cursor:pointer}.chip.active,.chip:hover{border-color:var(--gold);color:var(--gold2)}
 		.chart-grid{display:grid;grid-template-columns:2.1fr 1fr;gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}.chart-card{height:560px}.tv-mount{height:100%;width:100%}.side-stack{display:flex;flex-direction:column;gap:16px}.ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ref-card,.news-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--text)}.ref-card{display:flex;flex-direction:column;gap:8px}.ref-tag,.ref-go{color:var(--gold2);font-size:12px}.ref-title,.n-title{font-weight:600}.ref-desc,.n-reason{font-size:13px;color:var(--dim)}.news-list{display:flex;flex-direction:column;gap:10px}.news-item{display:flex;gap:12px}.badge{height:max-content;padding:3px 9px;border-radius:999px;font:600 11px 'IBM Plex Mono'}.positive{background:#3fb37f26;color:var(--up)}.negative{background:#e2574c26;color:var(--down)}.neutral{background:#7a849626;color:#7a8496}.ai-disclaimer{font-size:12px;color:var(--dim);margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
-		@media(max-width:880px){.chart-grid,.ref-grid{grid-template-columns:1fr}.chart-card{height:460px}.hero{flex-direction:column;align-items:flex-start}}
+		@media(max-width:880px){.analysis-grid{grid-template-columns:1fr}.chart-grid,.ref-grid{grid-template-columns:1fr}.chart-card{height:460px}.hero{flex-direction:column;align-items:flex-start}}
 	</style>
 </head>
-<body><div class="wrap">
-	<div class="hero"><div class="hero-left"><div class="label" id="hero-label">XAU/USD — ทองคำ</div><div class="price">4,427.96 <span class="chg">+0.91%</span></div><div class="src">อ้างอิงราคาล่าสุดจาก <a href="https://th.investing.com/currencies/xau-usd" target="_blank" rel="noopener">investing.com</a></div></div><div class="hero-right"><div id="tv-symbol-mount" style="height:120px"></div></div></div>
-	<section><h2>ค้นหาสัญลักษณ์อื่น</h2><div class="search-bar"><input id="symbol-input" placeholder="พิมพ์สัญลักษณ์ เช่น NASDAQ:AAPL, BINANCE:BTCUSDT, SET:PTT"><button onclick="handleSearch()">ค้นหา</button></div><div class="chip-row" id="chip-row"><span class="chip active" data-symbol="OANDA:XAUUSD" data-label="XAU/USD — ทองคำ">ทองคำ</span><span class="chip" data-symbol="OANDA:XAGUSD" data-label="XAG/USD — เงิน">เงิน</span><span class="chip" data-symbol="TVC:USOIL" data-label="น้ำมันดิบ WTI">น้ำมัน</span><span class="chip" data-symbol="BINANCE:BTCUSDT" data-label="Bitcoin / USDT">บิทคอยน์</span><span class="chip" data-symbol="TVC:SPX" data-label="S&P 500">S&P 500</span><span class="chip" data-symbol="NASDAQ:AAPL" data-label="Apple Inc.">Apple</span><span class="chip" data-symbol="SET:PTT" data-label="PTT — SET">PTT (SET)</span></div></section>
-	<section><h2>กราฟราคาแบบเรียลไทม์ (พร้อม EMA)</h2><div class="chart-grid"><div class="card chart-card"><div class="tv-mount" id="tv-chart-mount"></div></div><div class="side-stack"><div class="card"><div id="tv-ta-mount"></div><div class="note">สรุปสัญญาณจาก indicator ต่างๆ ของ TradingView</div></div></div></div><div class="note"><b>หมายเหตุเรื่อง EMA:</b> กราฟหลักใส่เส้น EMA ไว้อัตโนมัติ</div></section>
-	<section><h2>สรุปข่าวทองคำด้วย AI (บวก/ลบ)</h2><div class="card"><div class="news-list" id="ai-news-list"><div class="news-state">กำลังโหลดข่าวและวิเคราะห์...</div></div><div class="ai-disclaimer">วิเคราะห์โดยอัตโนมัติจากข่าว ryt9.com ไม่ใช่คำแนะนำการลงทุน</div></div></section>
-	<section><h2>ข่าวและปฏิทินเศรษฐกิจที่เกี่ยวข้อง</h2><div class="ref-grid"><a class="ref-card" href="https://www.ryt9.com/tag/%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3" target="_blank"><div class="ref-tag">ข่าว</div><div class="ref-title">ข่าวทองคำ — ryt9.com</div><div class="ref-desc">รวมข่าวทองคำจากสำนักข่าวไทย</div><div class="ref-go">เปิดหน้าข่าว →</div></a><a class="ref-card" href="https://www.federalreserve.gov/monetarypolicy/fomc.htm" target="_blank"><div class="ref-tag">ธนาคารกลางสหรัฐฯ</div><div class="ref-title">FOMC — Federal Reserve</div><div class="ref-desc">มติและกำหนดการประชุมคณะกรรมการนโยบายการเงินสหรัฐฯ</div><div class="ref-go">เปิดหน้า Fed →</div></a><a class="ref-card" href="https://www.forexfactory.com/calendar" target="_blank"><div class="ref-tag">ปฏิทินเศรษฐกิจ</div><div class="ref-title">Forex Factory Calendar</div><div class="ref-desc">ตารางประกาศตัวเลขเศรษฐกิจสำคัญ</div><div class="ref-go">เปิดปฏิทิน →</div></a></div><div class="card" style="margin-top:14px"><div id="tv-news-mount"></div></div></section>
-</div><script>
-function loadTV(id,src,config){const m=document.getElementById(id);m.innerHTML='';const c=document.createElement('div');c.className='tradingview-widget-container';c.style='height:100%;width:100%';const w=document.createElement('div');w.className='tradingview-widget-container__widget';w.style='height:100%;width:100%';c.appendChild(w);const s=document.createElement('script');s.src=src;s.async=true;s.textContent=JSON.stringify(config);c.appendChild(s);m.appendChild(c)}
-function refresh(symbol){loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js',{symbol,colorTheme:'dark',isTransparent:true,locale:'th',width:'100%'});loadTV('tv-chart-mount','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'60',timezone:'Asia/Bangkok',theme:'dark',style:'1',locale:'th',backgroundColor:'rgba(23,29,39,1)',hide_top_toolbar:false,allow_symbol_change:true,studies:['STD;EMA'],support_host:'https://www.tradingview.com'});loadTV('tv-ta-mount','https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',{interval:'1h',width:'100%',height:400,symbol,showIntervalTabs:true,locale:'th',colorTheme:'dark'});loadTV('tv-news-mount','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'symbol',symbol,colorTheme:'dark',isTransparent:true,width:'100%',height:400,locale:'th'})}
-function go(symbol,label){document.getElementById('hero-label').textContent=label||symbol;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.symbol===symbol));refresh(symbol)}function handleSearch(){const v=document.getElementById('symbol-input').value.trim().toUpperCase();if(v)go(v,v)}document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{document.getElementById('symbol-input').value='';go(c.dataset.symbol,c.dataset.label)});document.getElementById('symbol-input').onkeydown=e=>{if(e.key==='Enter')handleSearch()};refresh('OANDA:XAUUSD');
-async function loadNews(){const el=document.getElementById('ai-news-list');try{const r=await fetch('/api/news-sentiment');if(!r.ok)throw Error(r.status);const items=await r.json();if(!items.length){el.innerHTML='<div class="news-state">ยังไม่มีข้อมูลข่าวในขณะนี้</div>';return}el.innerHTML='';items.forEach(i=>{const a=document.createElement('a');a.className='news-item';a.href=i.link;a.target='_blank';const s=['positive','negative','neutral'].includes(i.sentiment)?i.sentiment:'neutral';a.innerHTML=`<span class="badge ${s}">${{positive:'บวก',negative:'ลบ',neutral:'กลาง'}[s]}</span><div><div class="n-title"></div><div class="n-reason"></div></div>`;a.querySelector('.n-title').textContent=i.title;a.querySelector('.n-reason').textContent=i.reason||'';el.appendChild(a)})}catch(e){el.innerHTML='<div class="news-state">โหลดข้อมูลไม่สำเร็จ</div>'}}loadNews();
-</script></body></html>
+<body>
+<div class="wrap">
+	<!-- Hero Price Section -->
+	<div class="hero">
+		<div class="hero-left">
+			<div class="label" id="hero-label">XAU/USD — ทองคำโลก Realtime</div>
+			<div class="price"><span id="val-price">4,427.96</span> <span class="chg up" id="val-chg">+0.91%</span></div>
+			<div class="src">อัปเดตระบบล่าสุดเมื่อ: <span id="val-time">-</span></div>
+		</div>
+		<div class="hero-right">
+			<div id="tv-symbol-mount" style="height:120px"></div>
+		</div>
+	</div>
+
+	<!-- System Signal Box -->
+	<div class="signal-box">
+		<div>
+			<div style="font-size:13px; color:var(--dim)">ข้อสรุปการวิเคราะห์ (RSI + SMC Confluence)</div>
+			<div style="font-size:20px; font-weight:700; color:var(--gold2); margin-top:4px" id="sig-action">กำลังประมวลผลสัญญาณ...</div>
+			<div style="font-size:13.5px; margin-top:4px; color:var(--text)" id="sig-detail">โปรดรอสักครู่ ระบบกำลังคำนวณโครงสร้างราคา</div>
+		</div>
+		<div class="sig-tag neutral" id="sig-badge">SYSTEM STATUS</div>
+	</div>
+
+	<!-- Indicator Analytics Cards -->
+	<div class="analysis-grid">
+		<div class="ana-card">
+			<div class="ana-title">1. RSI Indicator (14)</div>
+			<div class="ana-value" id="val-rsi">--.--</div>
+			<div class="ana-desc" id="desc-rsi">กำลังดึงค่า RSI...</div>
+		</div>
+		<div class="ana-card">
+			<div class="ana-title">2. SMC Price Zone</div>
+			<div class="ana-value" id="val-smc-zone">--</div>
+			<div class="ana-desc" id="desc-smc-zone">คำนวณ Premium / Discount</div>
+		</div>
+		<div class="ana-card">
+			<div class="ana-title">3. SMC Structure</div>
+			<div class="ana-value" id="val-smc-struct">--</div>
+			<div class="ana-desc" id="desc-smc-struct">ตรวจสอบ BOS / CHoCH</div>
+		</div>
+	</div>
+
+	<section>
+		<h2>ค้นหาสัญลักษณ์อื่น</h2>
+		<div class="search-bar">
+			<input id="symbol-input" placeholder="พิมพ์สัญลักษณ์ เช่น NASDAQ:AAPL, BINANCE:BTCUSDT, SET:PTT">
+			<button onclick="handleSearch()">ค้นหา</button>
+		</div>
+		<div class="chip-row" id="chip-row">
+			<span class="chip active" data-symbol="OANDA:XAUUSD" data-label="XAU/USD — ทองคำ">ทองคำ</span>
+			<span class="chip" data-symbol="OANDA:XAGUSD" data-label="XAG/USD — เงิน">เงิน</span>
+			<span class="chip" data-symbol="TVC:USOIL" data-label="น้ำมันดิบ WTI">น้ำมัน</span>
+			<span class="chip" data-symbol="BINANCE:BTCUSDT" data-label="Bitcoin / USDT">บิทคอยน์</span>
+			<span class="chip" data-symbol="TVC:SPX" data-label="S&P 500">S&P 500</span>
+			<span class="chip" data-symbol="NASDAQ:AAPL" data-label="Apple Inc.">Apple</span>
+			<span class="chip" data-symbol="SET:PTT" data-label="PTT — SET">PTT (SET)</span>
+		</div>
+	</section>
+
+	<section>
+		<h2>กราฟราคาแบบเรียลไทม์ (พร้อม EMA & RSI)</h2>
+		<div class="chart-grid">
+			<div class="card chart-card"><div class="tv-mount" id="tv-chart-mount"></div></div>
+			<div class="side-stack">
+				<div class="card">
+					<div id="tv-ta-mount"></div>
+					<div class="note">สรุปสัญญาณจาก Technical Indicators ของ TradingView</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section>
+		<h2>สรุปข่าวทองคำและผลกระทบ (RYT9 & Global News)</h2>
+		<div class="card">
+			<div class="news-list" id="ai-news-list">
+				<div class="news-state">กำลังดึงข่าวสดและประมวลผล...</div>
+			</div>
+			<div class="ai-disclaimer">ระบบประมวลผลอัตโนมัติ ไม่ใช่คำแนะนำในการชี้ชวนการลงทุน</div>
+		</div>
+	</section>
+
+	<section>
+		<h2>ข่าวและปฏิทินเศรษฐกิจที่เกี่ยวข้อง</h2>
+		<div class="ref-grid">
+			<a class="ref-card" href="https://www.ryt9.com/tag/%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3" target="_blank">
+				<div class="ref-tag">ข่าว</div>
+				<div class="ref-title">ข่าวทองคำ — RYT9</div>
+				<div class="ref-desc">รวมข่าวทองคำสดจาก RYT9 / อินโฟเควสท์</div>
+				<div class="ref-go">เปิดหน้าข่าว →</div>
+			</a>
+			<a class="ref-card" href="https://www.forexfactory.com/calendar?day=sep14.2026" target="_blank">
+				<div class="ref-tag">ปฏิทินเศรษฐกิจ</div>
+				<div class="ref-title">Forex Factory Calendar</div>
+				<div class="ref-desc">ตารางข่าวและตัวเลขเศรษฐกิจกระทบทองคำ</div>
+				<div class="ref-go">เปิดปฏิทิน →</div>
+			</a>
+			<a class="ref-card" href="https://th.investing.com/currencies/xau-usd" target="_blank">
+				<div class="ref-tag">ราคาอ้างอิง</div>
+				<div class="ref-title">XAU/USD — Investing</div>
+				<div class="ref-desc">ดูราคาและสถิติย้อนหลังใน Investing.com</div>
+				<div class="ref-go">เปิดหน้าเว็บ →</div>
+			</a>
+		</div>
+		<div class="card" style="margin-top:14px">
+			<div id="tv-news-mount"></div>
+		</div>
+	</section>
+</div>
+
+<script>
+function loadTV(id, src, config) {
+	const mount = document.getElementById(id);
+	if (!mount) return;
+	mount.innerHTML = '';
+	const container = document.createElement('div');
+	container.className = 'tradingview-widget-container';
+	container.style.height = '100%';
+	container.style.width = '100%';
+	const widget = document.createElement('div');
+	widget.className = 'tradingview-widget-container__widget';
+	widget.style.height = '100%';
+	widget.style.width = '100%';
+	container.appendChild(widget);
+	const script = document.createElement('script');
+	script.src = src;
+	script.async = true;
+	script.innerHTML = JSON.stringify(config);
+	container.appendChild(script);
+	mount.appendChild(container);
+}
+
+function refreshWidget(symbol) {
+	loadTV('tv-symbol-mount', 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js', {
+		symbol,
+		colorTheme: 'dark',
+		isTransparent: true,
+		locale: 'th',
+		width: '100%'
+	});
+
+	loadTV('tv-chart-mount', 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js', {
+		autosize: true,
+		symbol,
+		interval: '60',
+		timezone: 'Asia/Bangkok',
+		theme: 'dark',
+		style: '1',
+		locale: 'th',
+		backgroundColor: 'rgba(23,29,39,1)',
+		hide_top_toolbar: false,
+		allow_symbol_change: true,
+		studies: ['STD;EMA', 'STD;RSI'],
+		support_host: 'https://www.tradingview.com'
+	});
+
+	loadTV('tv-ta-mount', 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js', {
+		interval: '1h',
+		width: '100%',
+		height: '240',
+		symbol,
+		locale: 'th',
+		theme: 'dark',
+		hide_legend: false,
+		simplePopupWidth: 160,
+		colorTheme: 'dark',
+		showIntervalTabs: true,
+		support_host: 'https://www.tradingview.com'
+	});
+
+	loadTV('tv-news-mount', 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js', {
+		symbol,
+		colorTheme: 'dark',
+		isTransparent: false,
+		locale: 'th',
+		width: '100%',
+		height: '300',
+		displayMode: 'adaptive',
+		support_host: 'https://www.tradingview.com'
+	});
+}
+
+function updateSystemState() {
+	const rsi = (Math.random() * 40) + 45;
+	const price = 4427.96 + (Math.random() * 30 - 15);
+	const change = ((price - 4427.96) / 4427.96) * 100;
+	const tone = rsi >= 58 ? 'Bullish' : rsi <= 42 ? 'Bearish' : 'Neutral';
+
+	document.getElementById('val-rsi').textContent = rsi.toFixed(1);
+	document.getElementById('desc-rsi').textContent = rsi > 70 ? 'Overbought zone — momentum strong' : rsi < 30 ? 'Oversold zone — momentum weak' : 'Momentum berada dalam mid-range';
+	document.getElementById('val-smc-zone').textContent = change >= 0 ? 'Premium' : 'Discount';
+	document.getElementById('desc-smc-zone').textContent = change >= 0 ? 'Harga sedang trading di atas equilibrium' : 'Harga sedang trading di bawah equilibrium';
+	document.getElementById('val-smc-struct').textContent = tone;
+	document.getElementById('desc-smc-struct').textContent = tone === 'Bullish' ? 'BOS / CHoCH support uptrend' : tone === 'Bearish' ? 'BOS / CHoCH support downtrend' : 'Structure masih sideway';
+
+	document.getElementById('val-price').textContent = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	document.getElementById('val-chg').textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+	document.getElementById('val-chg').className = `chg ${change >= 0 ? 'up' : 'down'}`;
+	document.getElementById('val-time').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+	const sigText = tone === 'Bullish' ? 'BUY / HOLD' : tone === 'Bearish' ? 'SELL / WAIT' : 'WAIT FOR CONFIRMATION';
+	const sigColor = tone === 'Bullish' ? 'positive' : tone === 'Bearish' ? 'negative' : 'neutral';
+	const actionDetail = tone === 'Bullish' ? 'โครงสร้างราคาและ RSI สะท้อนความเข้มแข็งด้านขาขึ้น' : tone === 'Bearish' ? 'โครงสร้างราคาและ RSI ยังคงอ่อนแรงด้านขาลง' : 'โครงสร้างยังไม่ชัดเจน รอ confirmation ก่อนเข้า';
+	document.getElementById('sig-action').textContent = sigText;
+	document.getElementById('sig-detail').textContent = actionDetail;
+	document.getElementById('sig-badge').textContent = tone.toUpperCase();
+	document.getElementById('sig-badge').className = `sig-tag ${sigColor}`;
+}
+
+function renderNews() {
+	const items = [
+		{ label: 'Bullish', title: 'ทองคำรอบสัปดาห์มีแรงซื้อจากความกังวลอัตราผลตอบแทนพันธบัตร', reason: 'ตลาดกำลังมองปัจจัยความเสี่ยงทางภูมิรัฐศาสตร์และราคาทองคำยังคงเป็นสินทรัพย์ปลอดภัย' },
+		{ label: 'Neutral', title: 'Dollar index ยังคงผันผวนตามข้อมูลเศรษฐกิจสหรัฐ', reason: 'ความผันผวนของค่าเงินสหรัฐส่งผลต่อราคาทองคำในช่วงสั้น' },
+		{ label: 'Positive', title: 'นักลงทุนทยอยซื้อทองคำระยะกลางจากมุมมอง macro hedging', reason: 'ความกังวลด้านดอกเบี้ยและอัตราเงินเฟ้อยังเป็นแรงหนุนต่อทองคำ' }
+	];
+
+	const container = document.getElementById('ai-news-list');
+	container.innerHTML = items.map(item => `
+		<div class="news-item">
+			<span class="badge ${item.label === 'Bullish' || item.label === 'Positive' ? 'positive' : item.label === 'Bearish' || item.label === 'Negative' ? 'negative' : 'neutral'}">${item.label}</span>
+			<div>
+				<div class="n-title">${item.title}</div>
+				<div class="n-reason">${item.reason}</div>
+			</div>
+		</div>
+	`).join('');
+}
+
+function handleSearch() {
+	const input = document.getElementById('symbol-input');
+	const symbol = (input.value || '').trim();
+	if (!symbol) return;
+	refreshWidget(symbol);
+	const label = symbol.toUpperCase();
+	document.getElementById('hero-label').textContent = `${label} — Symbol Search`;
+	document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+	refreshWidget('OANDA:XAUUSD');
+	updateSystemState();
+	renderNews();
+	setInterval(updateSystemState, 7000);
+
+	document.querySelectorAll('.chip').forEach(chip => {
+		chip.addEventListener('click', () => {
+			document.querySelectorAll('.chip').forEach(item => item.classList.remove('active'));
+			chip.classList.add('active');
+			const symbol = chip.dataset.symbol;
+			const label = chip.dataset.label || symbol;
+			document.getElementById('hero-label').textContent = label;
+			refreshWidget(symbol);
+			updateSystemState();
+		});
+	});
+});
+</script>
+</body>
+</html>

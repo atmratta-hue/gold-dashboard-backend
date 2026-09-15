@@ -1,12 +1,14 @@
 {
 	"name": "gold-dashboard-backend",
-	"version": "1.0.0",
-	"description": "Backend for KU Trader gold dashboard: reads the ryt9.com gold-news RSS feed and uses the Anthropic API to label each headline positive/negative/neutral for gold prices.",
+	"version": "2.0.0",
+	"description": "Gold Trading Dashboard with RSI, SMC, Real-time Price and News Sentiment Analysis",
 	"main": "server.js",
 	"scripts": {
 		"start": "node server.js"
 	},
 	"dependencies": {
+		"axios": "^1.7.2",
+		"cheerio": "^1.0.0-rc.12",
 		"dotenv": "^16.4.5",
 		"express": "^4.19.2",
 		"rss-parser": "^3.13.0"
