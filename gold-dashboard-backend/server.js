@@ -11,12 +11,12 @@ const rssParser = new Parser();
 app.use(express.static(path.join(__dirname, 'public')));
 
 const cacheStore = {};
-const CACHE_TTL = 10 * 1000; // Cache 10 วินาที ให้ข้อมูล Realtime
+const CACHE_TTL = 10 * 1000; // Cache 10 วินาที
 
-// 1. คำนวณ Stochastic Oscillator (%K, %D)
+// 1. คำนวณ Stochastic Oscillator (%K, %D) พร้อมเช็คแนวโน้มชันขึ้น/ลง
 function calculateStochastic(candles, kPeriod = 14, dPeriod = 3) {
   if (!candles || candles.length < kPeriod + dPeriod) {
-    return { k: 50, d: 50 };
+    return { k: 50, d: 50, trend: 'ขาขึ้น' };
   }
 
   const kValues = [];
@@ -34,12 +34,17 @@ function calculateStochastic(candles, kPeriod = 14, dPeriod = 3) {
   }
 
   const currentK = kValues[kValues.length - 1];
+  const prevK = kValues[kValues.length - 2] || currentK;
   const recentK = kValues.slice(-dPeriod);
   const currentD = recentK.reduce((sum, val) => sum + val, 0) / recentK.length;
 
+  // เปรียบเทียบเส้น Stochastic (%K) แท่งปัจจุบันเทียบกับแท่งก่อนหน้า เพื่อหาแนวโน้ม ชันขึ้น/ลง
+  const trend = currentK >= prevK ? 'ขาขึ้น' : 'ขาลง';
+
   return {
     k: parseFloat(currentK.toFixed(2)),
-    d: parseFloat(currentD.toFixed(2))
+    d: parseFloat(currentD.toFixed(2)),
+    trend: trend
   };
 }
 
@@ -78,7 +83,7 @@ function analyzeSMC(candles) {
   return { structure, zone, orderBlock, trend };
 }
 
-// 3. ดึงและวิเคราะห์ทิศทางข่าวจาก RYT9 (ระบบสรุปข่าว)
+// 3. ดึงข่าวจาก RYT9
 async function fetchNews() {
   try {
     const feed = await rssParser.parseURL('https://www.ryt9.com/tag/%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3/rss.xml');
@@ -96,7 +101,7 @@ async function fetchNews() {
       if (bullMatches.length > bearMatches.length) {
         sentiment = 'positive';
         reason = `ปัจจัยบวกต่อราคาทองคำ (${bullMatches.join(', ')})`;
-      } else if (bearMatches.length > bullMatches.length) {
+      } else if (bearMatches.length > bearMatches.length) {
         sentiment = 'negative';
         reason = `ปัจจัยกดดันราคาทองคำ (${bearMatches.join(', ')})`;
       }
@@ -111,7 +116,7 @@ async function fetchNews() {
   }
 }
 
-// 4. ดึงหรือจำลองแท่งเทียน
+// 4. ดึงหรือจำลองกราฟแท่งเทียน
 async function fetchGoldCandles(timeframe = '1h') {
   try {
     const intervalMap = { '1m': '1m', '5m': '5m', '1h': 'h', '4h': '4h', '1d': 'd' };
@@ -179,25 +184,36 @@ app.get('/api/dashboard-data', async (req, res) => {
     const smc = analyzeSMC(candles);
     const news = await fetchNews();
 
-    // ประมวลผลการ์ดใบที่ 1: "โซนซื้อ", "โซนขาย", "ขาขึ้น", หรือ "ขาลง"
+    // ---- เงื่อนไขปรับปรุง Stochastic 0-20 (โซนซื้อ), 80-100 (โซนขาย), 20-80 (ดูแนวโน้ม ขาขึ้น/ขาลง) ----
     let card1DisplayStatus = '';
     let card1Color = 'neutral';
 
-    if (stoch.k >= 15 && stoch.k <= 22) {
+    if (stoch.k >= 0 && stoch.k <= 20) {
       card1DisplayStatus = 'โซนซื้อ';
       card1Color = 'positive';
     } else if (stoch.k >= 80 && stoch.k <= 100) {
       card1DisplayStatus = 'โซนขาย';
       card1Color = 'negative';
     } else {
-      card1DisplayStatus = smc.trend;
-      card1Color = smc.trend === 'ขาขึ้น' ? 'positive' : 'negative';
+      // อยู่ในช่วง 20 - 80 ให้เช็คแนวโน้มตามทิศทางความชันของเส้น Stochastic (%K)
+      card1DisplayStatus = stoch.trend;
+      card1Color = stoch.trend === 'ขาขึ้น' ? 'positive' : 'negative';
     }
+
+    // ข้อสรุป Signal Confluence
+    let sigAction = `สถานะ: ${card1DisplayStatus}`;
+    let sigDetail = `Stochastic %K อยู่ที่ ${stoch.k} | SMC Structure: ${smc.structure} (${smc.zone})`;
+    let sigBadge = card1Color;
 
     const responseData = {
       timeframe: selectedTF.toUpperCase(),
       price: currentPrice.toFixed(2),
       change: (changePercent >= 0 ? `+${changePercent}%` : `${changePercent}%`),
+      signal: {
+        action: sigAction,
+        detail: sigDetail,
+        badge: sigBadge
+      },
       card1Status: card1DisplayStatus,
       card1Color: card1Color,
       stochasticRaw: stoch,

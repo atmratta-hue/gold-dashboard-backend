@@ -56,7 +56,7 @@
     <div class="hero">
         <div class="hero-left">
             <div class="label" id="hero-label">XAU/USD — ทองคำโลก Realtime</div>
-            <div class="price"><span id="val-price">4,427.96</span> <span class="chg up" id="val-chg">+0.91%</span></div>
+            <div class="price"><span id="val-price">2,740.50</span> <span class="chg up" id="val-chg">+0.00%</span></div>
             <div class="src">อัปเดตระบบล่าสุดเมื่อ: <span id="val-time">-</span></div>
         </div>
         <div class="hero-right">
@@ -88,11 +88,11 @@
 
     <!-- Indicator Analytics Cards -->
     <div class="analysis-grid">
-        <!-- การ์ดใบที่ 1: แสดงสถานะโซนอย่างชัดเจนเพียงอย่างเดียว -->
+        <!-- การ์ดใบที่ 1: สถานะโซน Stochastic (0-20 ซื้อ / 80-100 ขาย / 20-80 ดูแนวโน้ม) -->
         <div class="ana-card">
             <div class="ana-title">1. สถานะโซน Stochastic (<span class="txt-tf-display">TF 1H</span>)</div>
             <div class="ana-value positive" id="val-card1-status">กำลังคำนวณ...</div>
-            <div class="ana-desc" id="desc-card1-sub">เกณฑ์โซน: 1–22 / 80–100</div>
+            <div class="ana-desc" id="desc-card1-sub">เกณฑ์โซน: ซื้อ (0-20) / ขาย (80-100)</div>
         </div>
         <!-- การ์ดใบที่ 2: SMC Price Zone -->
         <div class="ana-card">
@@ -202,7 +202,7 @@ function loadTV(id,src,config){
 function refreshWidget(symbol, tvInterval = '60'){
     currentSymbol = symbol;
 
-    // Single Quote Widget แบบมินิมอล
+    // Single Quote Widget
     loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js',{
         symbol: symbol,
         width: "100%",
@@ -287,15 +287,30 @@ async function loadBackendData(){
             sigBadge.className = `sig-tag ${data.signal.badge || 'neutral'}`;
         }
 
-        // การ์ดใบที่ 1: แสดงเฉพาะ "โซนซื้อ", "โซนขาย", "ขาขึ้น", หรือ "ขาลง"
+        // การ์ดใบที่ 1: Stochastic Status (0-20 โซนซื้อ / 80-100 โซนขาย / 20-80 ขาขึ้นหรือขาลง)
         const card1El = document.getElementById('val-card1-status');
-        const statusText = data.card1Status || (data.stochasticRaw ? (data.stochasticRaw.k <= 22 ? 'โซนซื้อ' : data.stochasticRaw.k >= 80 ? 'โซนขาย' : 'ขาขึ้น') : '--');
-        const statusColor = data.card1Color || 'neutral';
+        let statusText = data.card1Status;
+        let statusColor = data.card1Color;
+
+        if (!statusText && data.stochasticRaw) {
+            const k = data.stochasticRaw.k;
+            if (k >= 0 && k <= 20) {
+                statusText = 'โซนซื้อ';
+                statusColor = 'positive';
+            } else if (k >= 80 && k <= 100) {
+                statusText = 'โซนขาย';
+                statusColor = 'negative';
+            } else {
+                statusText = data.stochasticRaw.trend || 'ขาขึ้น';
+                statusColor = statusText === 'ขาขึ้น' ? 'positive' : 'negative';
+            }
+        }
+
+        card1El.textContent = statusText || 'กำลังคำนวณ...';
+        card1El.className = `ana-value ${statusColor || 'neutral'}`;
         
-        card1El.textContent = statusText;
-        card1El.className = `ana-value ${statusColor}`;
         if(data.stochasticRaw) {
-            document.getElementById('desc-card1-sub').textContent = `ค่า %K จริง: ${data.stochasticRaw.k} (TF ${data.timeframe})`;
+            document.getElementById('desc-card1-sub').textContent = `ค่า %K: ${data.stochasticRaw.k} | แนวโน้ม: ${data.stochasticRaw.trend}`;
         }
 
         // การ์ดใบที่ 2: SMC Zone
