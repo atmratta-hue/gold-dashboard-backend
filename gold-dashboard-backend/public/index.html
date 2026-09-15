@@ -13,6 +13,7 @@
 		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:20px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:18px}
 		.price{font:600 38px 'IBM Plex Mono';color:var(--gold2)}
 		.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}
+		h2{font-size:17px;margin:24px 0 12px;padding-left:12px;border-left:3px solid var(--gold)}
 		
 		.tf-selector-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--panel);padding:10px 16px;border-radius:8px;border:1px solid var(--line);flex-wrap:wrap}
 		.tf-label{font-size:13.5px;color:var(--dim);font-weight:500}
@@ -20,7 +21,6 @@
 		.tf-btn{background:var(--panel2);border:1px solid var(--line);color:var(--dim);padding:6px 14px;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s}
 		.tf-btn.active,.tf-btn:hover{background:var(--gold);color:#1a1406;border-color:var(--gold)}
 
-		/* Analytics Cards Layout */
 		.analysis-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
 		.ana-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;justify-content:center}
 		.ana-title{font-size:13px;color:var(--dim);margin-bottom:8px}
@@ -30,7 +30,20 @@
 		.ana-value.neutral{color:var(--gold2)}
 		.ana-desc{font-size:13px;margin-top:6px;color:var(--dim)}
 
-		.chart-grid{display:grid;grid-template-columns:1fr;gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}.chart-card{height:540px}.tv-mount{height:100%;width:100%}
+		.chart-grid{display:grid;grid-template-columns:1fr;gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}.chart-card{height:520px}.tv-mount{height:100%;width:100%}
+
+		/* News Section Styles */
+		.news-list{display:flex;flex-direction:column;gap:12px}
+		.news-item{display:flex;gap:14px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px;text-decoration:none;color:var(--text);transition:border-color 0.2s}
+		.news-item:hover{border-color:var(--gold)}
+		.badge{height:max-content;padding:4px 10px;border-radius:999px;font:600 12px 'IBM Plex Sans Thai';white-space:nowrap}
+		.badge.positive{background:#3fb37f26;color:var(--up);border:1px solid var(--up)}
+		.badge.negative{background:#e2574c26;color:var(--down);border:1px solid var(--down)}
+		.badge.neutral{background:#7a849626;color:#7a8496;border:1px solid #7a8496}
+		.n-title{font-weight:600;font-size:14px}
+		.n-reason{font-size:13px;color:var(--dim);margin-top:4px}
+		.ai-disclaimer{font-size:12px;color:var(--dim);margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+
 		@media(max-width:880px){.analysis-grid{grid-template-columns:1fr}}
 	</style>
 </head>
@@ -40,11 +53,11 @@
 		<div>
 			<div style="color:var(--dim);font-size:13px">XAU/USD — ราคาทองคำ Realtime</div>
 			<div class="price"><span id="val-price">2,740.50</span> <span class="chg up" id="val-chg">+0.00%</span></div>
-			<div style="font-size:12px;color:var(--dim);margin-top:4px">อัปเดตเรียลไทม์ล่าสุด: <span id="val-time">-</span></div>
+			<div style="font-size:12px;color:var(--dim);margin-top:4px">อัปเดตระบบเรียลไทม์ล่าสุด: <span id="val-time">-</span></div>
 		</div>
 	</div>
 
-	<!-- Timeframe Selector Bar (1M, 5M, 1H, 4H, 1D) -->
+	<!-- Timeframe Selector Bar -->
 	<div class="tf-selector-bar">
 		<span class="tf-label">เลือก Timeframe:</span>
 		<div class="tf-btn-group">
@@ -58,19 +71,19 @@
 
 	<!-- Indicator Analytics Cards -->
 	<div class="analysis-grid">
-		<!-- การ์ดใบที่ 1: สถานะโซน/เทรนด์ -->
+		<!-- การ์ดใบที่ 1: สถานะโซนซื้อ / โซนขาย / ขาขึ้น / ขาลง -->
 		<div class="ana-card">
 			<div class="ana-title">1. สถานะโซน Stochastic (TF: <span class="txt-tf">1H</span>)</div>
 			<div class="ana-value positive" id="card1-status">กำลังโหลด...</div>
 			<div class="ana-desc" id="card1-sub">Stochastic (15-22 / 80-100)</div>
 		</div>
-		<!-- การ์ดใบที่ 2: SMC Zone (แสดงเหมือนเดิม) -->
+		<!-- การ์ดใบที่ 2: SMC Zone -->
 		<div class="ana-card">
 			<div class="ana-title">2. SMC Price Zone</div>
 			<div class="ana-value neutral" id="card2-smc-zone">--</div>
-			<div class="ana-desc" id="card2-smc-desc">คำนวณโซน Premium / Discount</div>
+			<div class="ana-desc" id="card2-smc-desc">คำนวณ Premium / Discount</div>
 		</div>
-		<!-- การ์ดใบที่ 3: SMC Structure (แสดงเหมือนเดิม) -->
+		<!-- การ์ดใบที่ 3: SMC Structure -->
 		<div class="ana-card">
 			<div class="ana-title">3. SMC Structure</div>
 			<div class="ana-value neutral" id="card3-smc-struct">--</div>
@@ -78,9 +91,19 @@
 		</div>
 	</div>
 
-	<!-- Chart Section -->
+	<!-- Realtime Chart Section -->
+	<h2>กราฟราคาทองคำ Realtime</h2>
 	<div class="card chart-card">
 		<div class="tv-mount" id="tv-chart-mount"></div>
+	</div>
+
+	<!-- Gold News Section (นำกลับมาตามคำขอ) -->
+	<h2>สรุปข่าวทองคำและประเมินผลกระทบ (RYT9 News)</h2>
+	<div class="card">
+		<div class="news-list" id="news-list-container">
+			<div style="color:var(--dim);font-size:13.5px">กำลังดึงข้อมูลข่าวสด...</div>
+		</div>
+		<div class="ai-disclaimer">หมายเหตุ: ข่าวได้รับการวิเคราะห์แนวโน้มอัตโนมัติ เพื่อประกอบการพิจารณาเบื้องต้นเท่านั้น</div>
 	</div>
 </div>
 
@@ -140,7 +163,7 @@ async function loadRealtimeData(){
 
 		document.querySelectorAll('.txt-tf').forEach(el => el.textContent = data.timeframe);
 
-		// การ์ดใบที่ 1: แสดงเฉพาะสถานะ โซนซื้อ / โซนขาย / ขาขึ้น / ขาลง
+		// การ์ดใบที่ 1: สถานะโซน/เทรนด์
 		const c1El = document.getElementById('card1-status');
 		c1El.textContent = data.card1Status;
 		c1El.className = `ana-value ${data.card1Color}`;
@@ -154,12 +177,39 @@ async function loadRealtimeData(){
 		document.getElementById('card3-smc-struct').textContent = data.smc.structure;
 		document.getElementById('card3-smc-ob').textContent = data.smc.orderBlock;
 
+		// เรนเดอร์ข่าวทองคำ RYT9
+		const newsContainer = document.getElementById('news-list-container');
+		newsContainer.innerHTML = '';
+		if (!data.news || data.news.length === 0) {
+			newsContainer.innerHTML = '<div style="color:var(--dim)">ไม่มีข้อมูลข่าว ณ ขณะนี้</div>';
+			return;
+		}
+
+		data.news.forEach(item => {
+			const a = document.createElement('a');
+			a.className = 'news-item';
+			a.href = item.link;
+			a.target = '_blank';
+			
+			const labelMap = { positive: 'มุมมองบวก', negative: 'มุมมองลบ', neutral: 'เป็นกลาง' };
+			const badgeClass = item.sentiment || 'neutral';
+
+			a.innerHTML = `
+				<span class="badge ${badgeClass}">${labelMap[badgeClass]}</span>
+				<div>
+					<div class="n-title">${item.title}</div>
+					<div class="n-reason">${item.reason}</div>
+				</div>
+			`;
+			newsContainer.appendChild(a);
+		});
+
 	} catch(e) {
-		console.error('Data fetch failed:', e);
+		console.error('Data fetch error:', e);
 	}
 }
 
-// Initial Loading & Auto-refresh ทุก 10 วินาทีเพื่อความเรียลไทม์
+// Initial Loading & Auto-refresh ทุก 10 วินาที
 loadTVChart('OANDA:XAUUSD', '60');
 loadRealtimeData();
 setInterval(loadRealtimeData, 10000);

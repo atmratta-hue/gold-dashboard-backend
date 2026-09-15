@@ -11,7 +11,7 @@ const rssParser = new Parser();
 app.use(express.static(path.join(__dirname, 'public')));
 
 const cacheStore = {};
-const CACHE_TTL = 10 * 1000; // Cache 10 วินาที เพื่อให้ข้อมูล Realtime
+const CACHE_TTL = 10 * 1000; // Cache 10 วินาที ให้ข้อมูล Realtime
 
 // 1. คำนวณ Stochastic Oscillator (%K, %D)
 function calculateStochastic(candles, kPeriod = 14, dPeriod = 3) {
@@ -46,12 +46,7 @@ function calculateStochastic(candles, kPeriod = 14, dPeriod = 3) {
 // 2. วิเคราะห์ SMC Structure & Zone
 function analyzeSMC(candles) {
   if (!candles || candles.length < 15) {
-    return {
-      structure: 'Sideway',
-      zone: 'Equilibrium',
-      orderBlock: 'None',
-      trend: 'ขาขึ้น'
-    };
+    return { structure: 'Sideway', zone: 'Equilibrium', orderBlock: 'None', trend: 'ขาขึ้น' };
   }
 
   const closes = candles.map(c => c.close);
@@ -64,7 +59,6 @@ function analyzeSMC(candles) {
   const eqPrice = (highestHigh + lowestLow) / 2;
 
   const zone = currentPrice > eqPrice ? 'Premium (โซนแพง)' : 'Discount (โซนถูก)';
-
   const recentHigh = Math.max(...highs.slice(-10, -1));
   const recentLow = Math.min(...lows.slice(-10, -1));
 
@@ -84,7 +78,40 @@ function analyzeSMC(candles) {
   return { structure, zone, orderBlock, trend };
 }
 
-// 3. จำลอง/ดึงแท่งเทียนตาม Timeframe (1m, 5m, 1h, 4h, 1d)
+// 3. ดึงและวิเคราะห์ทิศทางข่าวจาก RYT9 (ระบบสรุปข่าว)
+async function fetchNews() {
+  try {
+    const feed = await rssParser.parseURL('https://www.ryt9.com/tag/%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3/rss.xml');
+    const keywordsBullish = ['พุ่ง', 'ขึ้น', 'บวก', 'หนุน', 'สูงสุด', 'เด้ง', 'ซื้อ', 'อ่อนค่า'];
+    const keywordsBearish = ['ร่วง', 'ลง', 'ลบ', 'ดิ่ง', 'กดดัน', 'ปรับฐาน', 'แข็งค่า', 'ขาย'];
+
+    return feed.items.slice(0, 6).map(item => {
+      const title = item.title || '';
+      let sentiment = 'neutral';
+      let reason = 'ข่าวยังไม่ส่งผลต่อทิศทางราคาชัดเจน';
+
+      const bullMatches = keywordsBullish.filter(k => title.includes(k));
+      const bearMatches = keywordsBearish.filter(k => title.includes(k));
+
+      if (bullMatches.length > bearMatches.length) {
+        sentiment = 'positive';
+        reason = `ปัจจัยบวกต่อราคาทองคำ (${bullMatches.join(', ')})`;
+      } else if (bearMatches.length > bullMatches.length) {
+        sentiment = 'negative';
+        reason = `ปัจจัยกดดันราคาทองคำ (${bearMatches.join(', ')})`;
+      }
+
+      return { title, link: item.link, pubDate: item.pubDate, sentiment, reason };
+    });
+  } catch (err) {
+    return [
+      { title: 'ตลาดยังคงจับตาตัวเลขเศรษฐกิจสหรัฐฯ และอัตราดอกเบี้ยเฟด', sentiment: 'neutral', reason: 'รอปัจจัยใหม่เข้ามาหนุนราคา', link: '#' },
+      { title: 'แรงซื้อสินทรัพย์ปลอดภัยช่วยหนุนราคาทองคำรีบาวด์', sentiment: 'positive', reason: 'มีปัจจัยบวกต่อราคาทองคำ', link: '#' }
+    ];
+  }
+}
+
+// 4. ดึงหรือจำลองแท่งเทียน
 async function fetchGoldCandles(timeframe = '1h') {
   try {
     const intervalMap = { '1m': '1m', '5m': '5m', '1h': 'h', '4h': '4h', '1d': 'd' };
@@ -131,7 +158,7 @@ function generateDemoCandles(timeframe = '1h') {
   return candles;
 }
 
-// 4. API Dashboard Main Endpoint
+// 5. API Main Endpoint
 app.get('/api/dashboard-data', async (req, res) => {
   try {
     const timeframe = (req.query.tf || '1h').toLowerCase();
@@ -150,8 +177,9 @@ app.get('/api/dashboard-data', async (req, res) => {
 
     const stoch = calculateStochastic(candles);
     const smc = analyzeSMC(candles);
+    const news = await fetchNews();
 
-    // เงื่อนไขการ์ดใบที่ 1: แสดงเฉพาะ "โซนซื้อ", "โซนขาย", "ขาขึ้น", หรือ "ขาลง"
+    // ประมวลผลการ์ดใบที่ 1: "โซนซื้อ", "โซนขาย", "ขาขึ้น", หรือ "ขาลง"
     let card1DisplayStatus = '';
     let card1Color = 'neutral';
 
@@ -162,7 +190,6 @@ app.get('/api/dashboard-data', async (req, res) => {
       card1DisplayStatus = 'โซนขาย';
       card1Color = 'negative';
     } else {
-      // หากไม่อยู่ในโซน ให้แสดงตามเทรนด์แท่งเทียนปัจจุบัน
       card1DisplayStatus = smc.trend;
       card1Color = smc.trend === 'ขาขึ้น' ? 'positive' : 'negative';
     }
@@ -175,6 +202,7 @@ app.get('/api/dashboard-data', async (req, res) => {
       card1Color: card1Color,
       stochasticRaw: stoch,
       smc: smc,
+      news: news,
       updatedAt: new Date().toLocaleTimeString('th-TH')
     };
 
