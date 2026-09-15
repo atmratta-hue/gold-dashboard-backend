@@ -10,7 +10,18 @@
 	<style>
 		:root{--bg:#10141b;--panel:#171d27;--panel2:#1d2430;--line:#2a3242;--gold:#c9a227;--gold2:#e8c96a;--text:#e9e7df;--dim:#8b93a1;--up:#3fb37f;--down:#e2574c}
 		*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.5}.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}
-		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}.hero-left .label{color:var(--dim);font-size:13px}.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}.src{font-size:12.5px;color:var(--dim)}.hero-right{min-width:280px;flex:1;max-width:520px}h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
+		
+		/* Hero Section layout adjustment */
+		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-space:between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}
+		.hero-left .label{color:var(--dim);font-size:13px}
+		.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}
+		.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}
+		.src{font-size:12.5px;color:var(--dim)}
+		
+		/* แก้ไข hero-right ควบคุมขนาด Widget ให้มินิมอล ไม่ซ้อนทับกรอบล่าง */
+		.hero-right{min-width:280px;flex:1;max-width:460px;height:98px;overflow:hidden;border-radius:8px;background:rgba(0,0,0,0.15);border:1px solid var(--line)}
+		
+		h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
 		
 		/* Signal Panel Box */
 		.analysis-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
@@ -27,7 +38,7 @@
 
 		.search-bar,.chip-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.search-bar{margin-bottom:14px}input{flex:1;min-width:220px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;color:var(--text);font:14px inherit}button{background:var(--gold);color:#1a1406;border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer}.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12.5px;color:var(--dim);cursor:pointer}.chip.active,.chip:hover{border-color:var(--gold);color:var(--gold2)}
 		.chart-grid{display:grid;grid-template-columns:2.1fr 1fr;gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}.chart-card{height:560px}.tv-mount{height:100%;width:100%}.side-stack{display:flex;flex-direction:column;gap:16px}.ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ref-card,.news-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--text)}.ref-card{display:flex;flex-direction:column;gap:8px}.ref-tag,.ref-go{color:var(--gold2);font-size:12px}.ref-title,.n-title{font-weight:600}.ref-desc,.n-reason{font-size:13px;color:var(--dim)}.news-list{display:flex;flex-direction:column;gap:10px}.news-item{display:flex;gap:12px}.badge{height:max-content;padding:3px 9px;border-radius:999px;font:600 11px 'IBM Plex Mono'}.positive{background:#3fb37f26;color:var(--up)}.negative{background:#e2574c26;color:var(--down)}.neutral{background:#7a849626;color:#7a8496}.ai-disclaimer{font-size:12px;color:var(--dim);margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
-		@media(max-width:880px){.analysis-grid{grid-template-columns:1fr}.chart-grid,.ref-grid{grid-template-columns:1fr}.chart-card{height:460px}.hero{flex-direction:column;align-items:flex-start}}
+		@media(max-width:880px){.analysis-grid{grid-template-columns:1fr}.chart-grid,.ref-grid{grid-template-columns:1fr}.chart-card{height:460px}.hero{flex-direction:column;align-items:flex-start}.hero-right{width:100%;max-width:100%}}
 	</style>
 </head>
 <body>
@@ -40,7 +51,7 @@
 			<div class="src">อัปเดตระบบล่าสุดเมื่อ: <span id="val-time">-</span></div>
 		</div>
 		<div class="hero-right">
-			<div id="tv-symbol-mount" style="height:120px"></div>
+			<div id="tv-symbol-mount" style="height:100%;width:100%"></div>
 		</div>
 	</div>
 
@@ -161,7 +172,15 @@ function loadTV(id,src,config){
 }
 
 function refreshWidget(symbol){
-	loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js',{symbol,colorTheme:'dark',isTransparent:true,locale:'th',width:'100%'});
+	// สลับมาใช้ Single Quote Widget แบบมินิมอล ป้องกันอาการข้อมูลซ้อนทับกรอบล่าง
+	loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js',{
+		symbol: symbol,
+		width: "100%",
+		isTransparent: true,
+		colorTheme: "dark",
+		locale: "th"
+	});
+
 	loadTV('tv-chart-mount','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'60',timezone:'Asia/Bangkok',theme:'dark',style:'1',locale:'th',backgroundColor:'rgba(23,29,39,1)',hide_top_toolbar:false,allow_symbol_change:true,studies:['STD;EMA','STD;RSI'],support_host:'https://www.tradingview.com'});
 	loadTV('tv-ta-mount','https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',{interval:'1h',width:'100%',height:400,symbol,showIntervalTabs:true,locale:'th',colorTheme:'dark'});
 	loadTV('tv-news-mount','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'symbol',symbol,colorTheme:'dark',isTransparent:true,width:'100%',height:400,locale:'th'});
