@@ -10,7 +10,7 @@
 	<style>
 		:root{--bg:#10141b;--panel:#171d27;--panel2:#1d2430;--line:#2a3242;--gold:#c9a227;--gold2:#e8c96a;--text:#e9e7df;--dim:#8b93a1;--up:#3fb37f;--down:#e2574c}
 		*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.5}.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}
-		.hero{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}.hero-left .label{color:var(--dim);font-size:13px}.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}.src{font-size:12.5px;color:var(--dim)}.hero-right{min-width:280px;flex:1;max-width:520px}h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
+		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}.hero-left .label{color:var(--dim);font-size:13px}.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}.src{font-size:12.5px;color:var(--dim)}.hero-right{min-width:280px;flex:1;max-width:520px}h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
 		
 		/* Signal Panel Box */
 		.analysis-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
@@ -39,11 +39,9 @@
 			<div class="price"><span id="val-price">4,427.96</span> <span class="chg up" id="val-chg">+0.91%</span></div>
 			<div class="src">อัปเดตระบบล่าสุดเมื่อ: <span id="val-time">-</span></div>
 		</div>
-		<div class="hero-right" style="overflow: hidden; border-radius: 8px;">
-    <div class="sub-label">ราคาสัญลักษณ์ที่เลือกด้านล่าง: <b id="chart-symbol-label">XAU/USD — ทองคำ</b></div>
-    <!-- ปรับความสูงเป็น 160px เพื่อให้บรรจุการ์ดได้อย่างสวยงามพอดี -->
-    <div id="tv-symbol-mount" style="height:160px; width:100%;"></div>
-</div>
+		<div class="hero-right">
+			<div id="tv-symbol-mount" style="height:120px"></div>
+		</div>
 	</div>
 
 	<!-- System Signal Box -->
@@ -144,59 +142,23 @@
 </div>
 
 <script>
-// ฟังก์ชันสร้าง Mini Chart / Symbol Overview ฝั่งขวาบน
-function renderTopRightWidget(symbol = 'OANDA:XAUUSD') {
-    const mountPoint = document.getElementById('tv-symbol-mount');
-    if (!mountPoint) return;
-
-    // ล้างค่าเก่าก่อนโหลดใหม่
-    mountPoint.innerHTML = '';
-
-    // สร้าง Element Script สำหรับ TradingView Symbol Overview (ลบ PREV, OPEN, VOLUME ออก)
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js';
-    script.async = true;
-    
-    // ตั้งค่าซ่อนข้อมูลสถิติด้านล่างออก
-    script.innerHTML = JSON.stringify({
-        "symbol": symbol,
-        "width": "100%",
-        "colorTheme": "dark",
-        "isTransparent": true,
-        "locale": "th_TH"
-    });
-
-    mountPoint.appendChild(script);
+function loadTV(id,src,config){
+	const m=document.getElementById(id);
+	m.innerHTML='';
+	const c=document.createElement('div');
+	c.className='tradingview-widget-container';
+	c.style='height:100%;width:100%';
+	const w=document.createElement('div');
+	w.className='tradingview-widget-container__widget';
+	w.style='height:100%;width:100%';
+	c.appendChild(w);
+	const s=document.createElement('script');
+	s.src=src;
+	s.async=true;
+	s.textContent=JSON.stringify(config);
+	c.appendChild(s);
+	m.appendChild(c);
 }
-
-// ถ้าคุณใช้แบบ Symbol Overview Mini Chart (มีกราฟเส้นเล็กๆ ด้านขวาด้วย) ให้ใช้แบบนี้แทนได้ครับ:
-/*
-function renderTopRightWidget(symbol = 'OANDA:XAUUSD') {
-    const mountPoint = document.getElementById('tv-symbol-mount');
-    if (!mountPoint) return;
-    
-    mountPoint.innerHTML = '';
-    
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-        "symbol": symbol,
-        "width": "100%",
-        "height": "100%",
-        "locale": "th_TH",
-        "dateRange": "1D",
-        "colorTheme": "dark",
-        "trendLineColor": "rgba(232, 201, 106, 1)",
-        "underLineColor": "rgba(201, 162, 39, 0.15)",
-        "isTransparent": true,
-        "autosize": true,
-        "largeChartUrl": ""
-    });
-
-    mountPoint.appendChild(script);
-}
-*/
 
 function refreshWidget(symbol){
 	loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js',{symbol,colorTheme:'dark',isTransparent:true,locale:'th',width:'100%'});
