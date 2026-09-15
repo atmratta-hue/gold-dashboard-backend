@@ -1,331 +1,250 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KU Trader — Gold Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-    
-    <!-- เพิ่ม สคริปต์หลัก TradingView สำหรับเรียกใช้งาน Widget -->
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>KU Trader — Gold Dashboard (RSI + SMC + News)</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+	<style>
+		:root{--bg:#10141b;--panel:#171d27;--panel2:#1d2430;--line:#2a3242;--gold:#c9a227;--gold2:#e8c96a;--text:#e9e7df;--dim:#8b93a1;--up:#3fb37f;--down:#e2574c}
+		*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.5}.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}
+		.hero{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;padding:22px 24px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:10px;margin-bottom:22px}.hero-left .label{color:var(--dim);font-size:13px}.price{font:600 40px 'IBM Plex Mono';color:var(--gold2)}.chg{font-size:18px}.chg.up{color:var(--up)}.chg.down{color:var(--down)}.src{font-size:12.5px;color:var(--dim)}.hero-right{min-width:280px;flex:1;max-width:520px}h2{font-size:17px;margin:0 0 12px;padding-left:12px;border-left:3px solid var(--gold)}section{margin-bottom:28px}
+		
+		/* Signal Panel Box */
+		.analysis-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
+		.ana-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+		.ana-title{font-size:13px;color:var(--dim);margin-bottom:6px}
+		.ana-value{font:600 24px 'IBM Plex Mono';color:var(--gold2)}
+		.ana-desc{font-size:13px;margin-top:6px;color:var(--text)}
 
-    <style>
-        :root {
-            --bg: #10141b;
-            --panel: #171d27;
-            --panel2: #1d2430;
-            --line: #2a3242;
-            --gold: #c9a227;
-            --gold2: #e8c96a;
-            --text: #e9e7df;
-            --dim: #8b93a1;
-            --up: #3fb37f;
-            --down: #e2574c;
-            --warn: #e0a72e;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'IBM Plex Sans Thai', sans-serif;
-            line-height: 1.5;
-        }
-        .wrap { max-width: 1180px; margin: auto; padding: 28px 20px 60px; }
-        .hero {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-end;
-            justify-content: space-between;
-            padding: 22px 24px;
-            background: linear-gradient(135deg, var(--panel), var(--panel2));
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            margin-bottom: 22px;
-        }
-        .hero-left .label { color: var(--dim); font-size: 13px; }
-        .price {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 40px;
-            font-weight: 600;
-            color: var(--gold2);
-        }
-        .chg { font-size: 18px; margin-left: 8px; }
-        .src, .note { font-size: 12.5px; color: var(--dim); }
-        .hero-right { min-width: 280px; flex: 1; max-width: 520px; }
-        .hero-right .sub-label { color: var(--dim); font-size: 12.5px; margin-bottom: 6px; }
-        
-        h2 { font-size: 17px; margin: 0 0 12px; padding-left: 12px; border-left: 3px solid var(--gold); }
-        section { margin-bottom: 28px; }
-        
-        .search-bar, .chip-row, .tf-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .search-bar { margin-bottom: 14px; }
-        
-        input {
-            flex: 1;
-            min-width: 220px;
-            background: var(--panel2);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 10px 14px;
-            color: var(--text);
-            font-size: 14px;
-            font-family: inherit;
-        }
-        button {
-            background: var(--gold);
-            color: #1a1406;
-            border: 0;
-            border-radius: 8px;
-            padding: 10px 18px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .chip, .tf-chip {
-            background: var(--panel2);
-            border: 1px solid var(--line);
-            border-radius: 999px;
-            padding: 6px 14px;
-            font-size: 12.5px;
-            color: var(--dim);
-            cursor: pointer;
-        }
-        .chip.active, .chip:hover, .tf-chip.active, .tf-chip:hover {
-            border-color: var(--gold);
-            color: var(--gold2);
-        }
-        
-        .chart-grid { display: grid; grid-template-columns: 2.1fr 1fr; gap: 16px; }
-        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
-        .chart-card { height: 560px; }
-        .tv-mount { height: 100%; width: 100%; }
-        .side-stack { display: flex; flex-direction: column; gap: 16px; }
-        
-        .ref-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .ref-card, .news-item { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; text-decoration: none; color: var(--text); }
-        .ref-card { display: flex; flex-direction: column; gap: 8px; }
-        .ref-tag, .ref-go { color: var(--gold2); font-size: 12px; }
-        .ref-title, .n-title { font-weight: 600; }
-        .ref-desc, .n-reason { font-size: 13px; color: var(--dim); }
-        
-        .news-list { display: flex; flex-direction: column; gap: 10px; }
-        .news-item { display: flex; gap: 12px; align-items: flex-start; }
-        .news-badges { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-        .badge {
-            padding: 3px 9px;
-            border-radius: 999px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            font-weight: 600;
-            white-space: nowrap;
-            text-align: center;
-        }
-        .badge.positive { background: #3fb37f26; color: var(--up); }
-        .badge.negative { background: #e2574c26; color: var(--down); }
-        .badge.neutral { background: #7a849626; color: #7a8496; }
-        .badge.impact-high { background: #e2574c26; color: var(--down); }
-        .badge.impact-medium { background: #e0a72e26; color: var(--warn); }
-        .badge.impact-low { background: #7a849626; color: #7a8496; }
-        
-        .n-source { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
-        .ai-disclaimer { font-size: 12px; color: var(--dim); margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
-        
-        .data-badge {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11.5px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 999px;
-            display: inline-block;
-        }
-        .data-badge.state-fresh { background: #3fb37f26; color: var(--up); }
-        .data-badge.state-stale { background: #e0a72e26; color: var(--warn); }
-        .data-badge.state-demo { background: #7a849626; color: #7a8496; }
-        
-        /* RSI gauge */
-        .rsi-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-        .rsi-num { font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 600; color: var(--gold2); }
-        .rsi-zone { font-size: 13px; font-weight: 600; }
-        .rsi-track {
-            position: relative;
-            height: 14px;
-            border-radius: 999px;
-            background: linear-gradient(to right,
-                var(--panel2) 0%, var(--panel2) 27%,
-                #3fb37f55 27%, #3fb37f55 30%,
-                var(--panel2) 30%, var(--panel2) 65%,
-                #e2574c55 65%, #e2574c55 75%,
-                var(--panel2) 75%, var(--panel2) 100%);
-            border: 1px solid var(--line);
-        }
-        .rsi-pointer { position: absolute; top: -4px; width: 4px; height: 22px; background: var(--gold2); border-radius: 2px; transform: translateX(-50%); transition: left .3s; }
-        .rsi-scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); margin-top: 4px; }
-        .rsi-caption { font-size: 12px; color: var(--dim); margin-top: 10px; }
-        
-        /* SMC grid */
-        .smc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .smc-stat { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
-        .smc-stat .k { font-size: 11.5px; color: var(--dim); margin-bottom: 4px; }
-        .smc-stat .v { font-size: 13.5px; font-weight: 600; }
-        
-        /* Signal banner */
-        .signal-banner { border-radius: 10px; padding: 18px 20px; border: 1px solid var(--line); margin-top: 16px; }
-        .signal-banner.signal-buy { background: #3fb37f1a; border-color: var(--up); }
-        .signal-banner.signal-sell { background: #e2574c1a; border-color: var(--down); }
-        .signal-banner.signal-wait { background: #7a849617; border-color: var(--line); }
-        .signal-verdict { font-family: 'IBM Plex Sans Thai', sans-serif; font-weight: 700; font-size: 24px; margin-bottom: 8px; }
-        .signal-banner.signal-buy .signal-verdict { color: var(--up); }
-        .signal-banner.signal-sell .signal-verdict { color: var(--down); }
-        .signal-banner.signal-wait .signal-verdict { color: var(--gold2); }
-        #signal-reasons { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--text); }
-        #signal-reasons li { margin-bottom: 4px; }
-        
-        .disclaimer-box { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: var(--dim); margin-top: 14px; }
-        .disclaimer-box ul { margin: 6px 0 0; padding-left: 18px; }
-        .analysis-header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        
-        /* Calendar */
-        .cal-item { display: grid; grid-template-columns: auto auto auto 1fr auto; gap: 10px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: 13px; }
-        .cal-item:last-child { border-bottom: none; }
-        .cal-time { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--gold2); white-space: nowrap; }
-        .cal-country { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--dim); }
-        .cal-title { font-weight: 500; }
-        .cal-fp { font-size: 11.5px; color: var(--dim); white-space: nowrap; }
-        .news-state { color: var(--dim); font-size: 13px; padding: 8px 0; }
-        
-        @media(max-width:880px) {
-            .chart-grid, .ref-grid, .smc-grid { grid-template-columns: 1fr; }
-            .chart-card { height: 460px; }
-            .hero { flex-direction: column; align-items: flex-start; }
-            .cal-item { grid-template-columns: 1fr; gap: 4px; }
-        }
-    </style>
+		.signal-box{background:var(--panel2);border:2px solid var(--gold);border-radius:10px;padding:20px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+		.sig-tag{padding:6px 16px;border-radius:20px;font-weight:700;font-size:16px}
+		.sig-tag.positive{background:#3fb37f26;color:var(--up);border:1px solid var(--up)}
+		.sig-tag.negative{background:#e2574c26;color:var(--down);border:1px solid var(--down)}
+		.sig-tag.neutral{background:#7a849626;color:#7a8496;border:1px solid #7a8496}
+
+		.search-bar,.chip-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.search-bar{margin-bottom:14px}input{flex:1;min-width:220px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;color:var(--text);font:14px inherit}button{background:var(--gold);color:#1a1406;border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer}.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12.5px;color:var(--dim);cursor:pointer}.chip.active,.chip:hover{border-color:var(--gold);color:var(--gold2)}
+		.chart-grid{display:grid;grid-template-columns:2.1fr 1fr;gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}.chart-card{height:560px}.tv-mount{height:100%;width:100%}.side-stack{display:flex;flex-direction:column;gap:16px}.ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ref-card,.news-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--text)}.ref-card{display:flex;flex-direction:column;gap:8px}.ref-tag,.ref-go{color:var(--gold2);font-size:12px}.ref-title,.n-title{font-weight:600}.ref-desc,.n-reason{font-size:13px;color:var(--dim)}.news-list{display:flex;flex-direction:column;gap:10px}.news-item{display:flex;gap:12px}.badge{height:max-content;padding:3px 9px;border-radius:999px;font:600 11px 'IBM Plex Mono'}.positive{background:#3fb37f26;color:var(--up)}.negative{background:#e2574c26;color:var(--down)}.neutral{background:#7a849626;color:#7a8496}.ai-disclaimer{font-size:12px;color:var(--dim);margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+		@media(max-width:880px){.analysis-grid{grid-template-columns:1fr}.chart-grid,.ref-grid{grid-template-columns:1fr}.chart-card{height:460px}.hero{flex-direction:column;align-items:flex-start}}
+	</style>
 </head>
 <body>
 <div class="wrap">
-    <div class="hero">
-        <div class="hero-left">
-            <div class="label">XAU/USD — ทองคำ (ราคาสด)</div>
-            <div><span class="price" id="hero-price">-</span><span class="chg" id="hero-change"></span></div>
-            <div class="src" id="hero-updated">กำลังโหลดราคา...</div>
-            <div class="src">แหล่งข้อมูล: <a href="https://xaus.com/api/" target="_blank" rel="noopener">xaus.com</a> (ไม่ต้องใช้ API Key) • เทียบราคากับ <a href="https://th.investing.com/currencies/xau-usd" target="_blank" rel="noopener">investing.com</a></div>
-            <div style="margin-top:8px"><span class="data-badge state-demo" id="hero-source-badge">กำลังโหลด...</span></div>
-        </div>
-        <div class="hero-right">
-            <div class="sub-label">ราคาสัญลักษณ์ที่เลือกด้านล่าง: <b id="chart-symbol-label">XAU/USD — ทองคำ</b></div>
-            <div id="tv-symbol-mount" style="height:120px"></div>
-        </div>
-    </div>
+	<!-- Hero Price Section -->
+	<div class="hero">
+		<div class="hero-left">
+			<div class="label" id="hero-label">XAU/USD — ทองคำโลก Realtime</div>
+			<div class="price"><span id="val-price">4,427.96</span> <span class="chg up" id="val-chg">+0.91%</span></div>
+			<div class="src">อัปเดตระบบล่าสุดเมื่อ: <span id="val-time">-</span></div>
+		</div>
+		<div class="hero-right">
+			<div id="tv-symbol-mount" style="height:120px"></div>
+		</div>
+	</div>
 
-    <section>
-        <h2>ค้นหาสัญลักษณ์อื่น</h2>
-        <div class="search-bar">
-            <input id="symbol-input" placeholder="พิมพ์สัญลักษณ์ เช่น NASDAQ:AAPL, BINANCE:BTCUSDT, SET:PTT">
-            <button id="search-btn">ค้นหา</button>
-        </div>
-        <div class="chip-row" id="chip-row">
-            <span class="chip active" data-symbol="OANDA:XAUUSD" data-label="XAU/USD — ทองคำ">ทองคำ</span>
-            <span class="chip" data-symbol="OANDA:XAGUSD" data-label="XAG/USD — เงิน">เงิน</span>
-            <span class="chip" data-symbol="TVC:USOIL" data-label="น้ำมันดิบ WTI">น้ำมัน</span>
-            <span class="chip" data-symbol="BINANCE:BTCUSDT" data-label="Bitcoin / USDT">บิทคอยน์</span>
-            <span class="chip" data-symbol="TVC:SPX" data-label="S&P 500">S&P 500</span>
-            <span class="chip" data-symbol="NASDAQ:AAPL" data-label="Apple Inc.">Apple</span>
-            <span class="chip" data-symbol="SET:PTT" data-label="PTT — SET">PTT (SET)</span>
-        </div>
-        <div class="note" style="margin-top:8px">หมายเหตุ: การค้นหา/เลือกสัญลักษณ์ด้านนี้เปลี่ยนเฉพาะกราฟ TradingView ด้านล่าง ส่วนแผงวิเคราะห์ RSI + SMC จะคำนวณสำหรับ XAU/USD (ทองคำ) เสมอ</div>
-    </section>
+	<!-- System Signal Box -->
+	<div class="signal-box">
+		<div>
+			<div style="font-size:13px; color:var(--dim)">ข้อสรุปการวิเคราะห์ (RSI + SMC Confluence)</div>
+			<div style="font-size:20px; font-weight:700; color:var(--gold2); margin-top:4px" id="sig-action">กำลังประมวลผลสัญญาณ...</div>
+			<div style="font-size:13.5px; margin-top:4px; color:var(--text)" id="sig-detail">โปรดรอสักครู่ ระบบกำลังคำนวณโครงสร้างราคา</div>
+		</div>
+		<div class="sig-tag neutral" id="sig-badge">SYSTEM STATUS</div>
+	</div>
 
-    <section>
-        <h2>กราฟราคาแบบเรียลไทม์ (พร้อม EMA)</h2>
-        <div class="chart-grid">
-            <div class="card chart-card"><div class="tv-mount" id="tv-chart-mount"></div></div>
-            <div class="side-stack">
-                <div class="card">
-                    <div id="tv-ta-mount"></div>
-                    <div class="note">สรุปสัญญาณจาก indicator ต่างๆ ของ TradingView</div>
-                </div>
-            </div>
-        </div>
-    </section>
+	<!-- Indicator Analytics Cards -->
+	<div class="analysis-grid">
+		<div class="ana-card">
+			<div class="ana-title">1. RSI Indicator (14)</div>
+			<div class="ana-value" id="val-rsi">--.--</div>
+			<div class="ana-desc" id="desc-rsi">กำลังดึงค่า RSI...</div>
+		</div>
+		<div class="ana-card">
+			<div class="ana-title">2. SMC Price Zone</div>
+			<div class="ana-value" id="val-smc-zone">--</div>
+			<div class="ana-desc" id="desc-smc-zone">คำนวณ Premium / Discount</div>
+		</div>
+		<div class="ana-card">
+			<div class="ana-title">3. SMC Structure</div>
+			<div class="ana-value" id="val-smc-struct">--</div>
+			<div class="ana-desc" id="desc-smc-struct">ตรวจสอบ BOS / CHoCH</div>
+		</div>
+	</div>
 
-    <section>
-        <div class="analysis-header">
-            <h2 style="margin:0">วิเคราะห์ RSI + SMC (XAU/USD)</h2>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                <span class="data-badge state-demo" id="analysis-source-badge">กำลังโหลด...</span>
-                <div class="tf-row">
-                    <span class="tf-chip" data-bucket="15">15 นาที</span>
-                    <span class="tf-chip active" data-bucket="30">30 นาที</span>
-                    <span class="tf-chip" data-bucket="60">1 ชั่วโมง</span>
-                </div>
-            </div>
-        </div>
+	<section>
+		<h2>ค้นหาสัญลักษณ์อื่น</h2>
+		<div class="search-bar">
+			<input id="symbol-input" placeholder="พิมพ์สัญลักษณ์ เช่น NASDAQ:AAPL, BINANCE:BTCUSDT, SET:PTT">
+			<button onclick="handleSearch()">ค้นหา</button>
+		</div>
+		<div class="chip-row" id="chip-row">
+			<span class="chip active" data-symbol="OANDA:XAUUSD" data-label="XAU/USD — ทองคำ">ทองคำ</span>
+			<span class="chip" data-symbol="OANDA:XAGUSD" data-label="XAG/USD — เงิน">เงิน</span>
+			<span class="chip" data-symbol="TVC:USOIL" data-label="น้ำมันดิบ WTI">น้ำมัน</span>
+			<span class="chip" data-symbol="BINANCE:BTCUSDT" data-label="Bitcoin / USDT">บิทคอยน์</span>
+			<span class="chip" data-symbol="TVC:SPX" data-label="S&P 500">S&P 500</span>
+			<span class="chip" data-symbol="NASDAQ:AAPL" data-label="Apple Inc.">Apple</span>
+			<span class="chip" data-symbol="SET:PTT" data-label="PTT — SET">PTT (SET)</span>
+		</div>
+	</section>
 
-        <div class="chart-grid">
-            <div class="card">
-                <div class="rsi-top"><div class="rsi-num" id="rsi-value">-</div><div class="rsi-zone" id="rsi-zone-label">กำลังคำนวณ...</div></div>
-                <div class="rsi-track"><div class="rsi-pointer" id="rsi-pointer"></div></div>
-                <div class="rsi-scale"><span>0</span><span>27–30 ซื้อ</span><span>50</span><span>65–75 ขาย</span><span>100</span></div>
-                <div class="rsi-caption" id="rsi-caption">กำลังโหลดข้อมูล...</div>
-            </div>
-            <div class="card">
-                <h2 style="font-size:14px;margin-bottom:10px">โครงสร้างตลาด (SMC)</h2>
-                <div class="smc-grid">
-                    <div class="smc-stat"><div class="k">แนวโน้มโครงสร้าง</div><div class="v" id="smc-trend">-</div></div>
-                    <div class="smc-stat"><div class="k">BOS / CHoCH ล่าสุด</div><div class="v" id="smc-last-event">-</div></div>
-                    <div class="smc-stat"><div class="k">Order Block ล่าสุด</div><div class="v" id="smc-order-block">-</div></div>
-                    <div class="smc-stat"><div class="k">Premium / Discount</div><div class="v" id="smc-premium-discount">-</div></div>
-                </div>
-                <div class="smc-stat" style="margin-top:12px"><div class="k">จุดสภาพคล่อง (Liquidity)</div><div class="v" id="smc-liquidity">-</div></div>
-            </div>
-        </div>
+	<section>
+		<h2>กราฟราคาแบบเรียลไทม์ (พร้อม EMA & RSI)</h2>
+		<div class="chart-grid">
+			<div class="card chart-card"><div class="tv-mount" id="tv-chart-mount"></div></div>
+			<div class="side-stack">
+				<div class="card">
+					<div id="tv-ta-mount"></div>
+					<div class="note">สรุปสัญญาณจาก Technical Indicators ของ TradingView</div>
+				</div>
+			</div>
+		</div>
+	</section>
 
-        <div class="signal-banner signal-wait" id="signal-banner">
-            <div class="signal-verdict" id="signal-verdict">กำลังประมวลผล...</div>
-            <ul id="signal-reasons"></ul>
-        </div>
+	<section>
+		<h2>สรุปข่าวทองคำและผลกระทบ (RYT9 & Global News)</h2>
+		<div class="card">
+			<div class="news-list" id="ai-news-list">
+				<div class="news-state">กำลังดึงข่าวสดและประมวลผล...</div>
+			</div>
+			<div class="ai-disclaimer">ระบบประมวลผลอัตโนมัติ ไม่ใช่คำแนะนำในการชี้ชวนการลงทุน</div>
+		</div>
+	</section>
 
-        <div class="disclaimer-box">
-            <b>ข้อควรระวัง:</b>
-            <ul>
-                <li>RSI อยู่ในโซนเฝ้าดูซื้อ (27–30) ไม่ได้แปลว่าราคาจะเด้งขึ้นทันที ราคาอาจอยู่ในภาวะขาลงต่อเนื่องได้</li>
-                <li>RSI อยู่ในโซนเฝ้าดูขาย (65–75) ไม่ได้แปลว่าต้องขายทันที เพราะราคาอาจอยู่ในแนวโน้มขาขึ้นที่แข็งแรง</li>
-                <li>การวิเคราะห์ SMC ในหน้านี้คำนวณจากราคาที่บันทึกอัตโนมัติทุก ~2 นาทีแล้วนำมาจัดกลุ่มเป็นแท่งเทียน จึงเป็นการประมาณโครงสร้างตลาด ไม่ใช่ข้อมูลแท่งเทียนตรงจากตลาดจริงทั้งหมด</li>
-                <li>เนื้อหาทั้งหมดในหน้านี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน โปรดยืนยันด้วยการวิเคราะห์ของท่านเองก่อนตัดสินใจซื้อขายจริง</li>
-            </ul>
-        </div>
-    </section>
-
-    <section>
-        <h2>สรุปข่าวทองคำ (วิเคราะห์อัตโนมัติด้วยกฎ ไม่ใช้ AI/API Key)</h2>
-        <div class="card">
-            <div class="news-list" id="ai-news-list"><div class="news-state">กำลังโหลดข่าวและวิเคราะห์...</div></div>
-            <div class="ai-disclaimer">วิเคราะห์อัตโนมัติด้วยชุดคำสำคัญ (keyword-based) จากข่าว ryt9.com และ investing.com ไม่ใช่คำแนะนำการลงทุน และอาจคลาดเคลื่อนได้</div>
-        </div>
-    </section>
-
-    <section>
-        <h2>ข่าวและปฏิทินเศรษฐกิจที่เกี่ยวข้อง</h2>
-        <div class="ref-grid">
-            <a class="ref-card" href="https://www.ryt9.com/tag/%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3" target="_blank" rel="noopener"><div class="ref-tag">ข่าว</div><div class="ref-title">ข่าวทองคำ — ryt9.com</div><div class="ref-desc">รวมข่าวทองคำจากสำนักข่าวไทย</div><div class="ref-go">เปิดหน้าข่าว →</div></a>
-            <a class="ref-card" href="https://www.federalreserve.gov/monetarypolicy/fomc.htm" target="_blank" rel="noopener"><div class="ref-tag">ธนาคารกลางสหรัฐฯ</div><div class="ref-title">FOMC — Federal Reserve</div><div class="ref-desc">มติและกำหนดการประชุมคณะกรรมการนโยบายการเงินสหรัฐฯ</div><div class="ref-go">เปิดหน้า Fed →</div></a>
-            <a class="ref-card" href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener"><div class="ref-tag">ปฏิทินเศรษฐกิจ</div><div class="ref-title">Forex Factory Calendar</div><div class="ref-desc">ตารางประกาศตัวเลขเศรษฐกิจสำคัญ</div><div class="ref-go">เปิดปฏิทิน →</div></a>
-        </div>
-        <div class="card" style="margin-top:14px">
-            <h2 style="font-size:14px">กิจกรรมเศรษฐกิจที่มีผลกระทบสูง/ปานกลางในสัปดาห์นี้</h2>
-            <div id="calendar-list"><div class="news-state">กำลังโหลดปฏิทินเศรษฐกิจ...</div></div>
-            <div class="ai-disclaimer">ข้อมูลจาก Forex Factory (ผ่านฟีดสาธารณะที่ไม่ต้องใช้ API Key) เวลาที่แสดงเป็นเวลาตามเบราว์เซอร์ของท่าน</div>
-        </div>
-        <div class="card" style="margin-top:14px">
-            <h2 style="font-size:14px">ข่าวต่างประเทศ (ผ่าน TradingView)</h2>
-            <div id="tv-news-mount"></div>
-        </div>
-    </section>
+	<section>
+		<h2>ข่าวและปฏิทินเศรษฐกิจที่เกี่ยวข้อง</h2>
+		<div class="ref-grid">
+			<a class="ref-card" href="https://www.ryt9.com/tag/%E0%B8%97%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B8%B3" target="_blank">
+				<div class="ref-tag">ข่าว</div>
+				<div class="ref-title">ข่าวทองคำ — RYT9</div>
+				<div class="ref-desc">รวมข่าวทองคำสดจาก RYT9 / อินโฟเควสท์</div>
+				<div class="ref-go">เปิดหน้าข่าว →</div>
+			</a>
+			<a class="ref-card" href="https://www.forexfactory.com/calendar?day=sep14.2026" target="_blank">
+				<div class="ref-tag">ปฏิทินเศรษฐกิจ</div>
+				<div class="ref-title">Forex Factory Calendar</div>
+				<div class="ref-desc">ตารางข่าวและตัวเลขเศรษฐกิจกระทบทองคำ</div>
+				<div class="ref-go">เปิดปฏิทิน →</div>
+			</a>
+			<a class="ref-card" href="https://th.investing.com/currencies/xau-usd" target="_blank">
+				<div class="ref-tag">ราคาอ้างอิง</div>
+				<div class="ref-title">XAU/USD — Investing</div>
+				<div class="ref-desc">ดูราคาและสถิติย้อนหลังใน Investing.com</div>
+				<div class="ref-go">เปิดหน้าเว็บ →</div>
+			</a>
+		</div>
+		<div class="card" style="margin-top:14px">
+			<div id="tv-news-mount"></div>
+		</div>
+	</section>
 </div>
 
-<script src="app.js" defer></script>
+<script>
+function loadTV(id,src,config){
+	const m=document.getElementById(id);
+	m.innerHTML='';
+	const c=document.createElement('div');
+	c.className='tradingview-widget-container';
+	c.style='height:100%;width:100%';
+	const w=document.createElement('div');
+	w.className='tradingview-widget-container__widget';
+	w.style='height:100%;width:100%';
+	c.appendChild(w);
+	const s=document.createElement('script');
+	s.src=src;
+	s.async=true;
+	s.textContent=JSON.stringify(config);
+	c.appendChild(s);
+	m.appendChild(c);
+}
+
+function refreshWidget(symbol){
+	loadTV('tv-symbol-mount','https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js',{symbol,colorTheme:'dark',isTransparent:true,locale:'th',width:'100%'});
+	loadTV('tv-chart-mount','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{autosize:true,symbol,interval:'60',timezone:'Asia/Bangkok',theme:'dark',style:'1',locale:'th',backgroundColor:'rgba(23,29,39,1)',hide_top_toolbar:false,allow_symbol_change:true,studies:['STD;EMA','STD;RSI'],support_host:'https://www.tradingview.com'});
+	loadTV('tv-ta-mount','https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',{interval:'1h',width:'100%',height:400,symbol,showIntervalTabs:true,locale:'th',colorTheme:'dark'});
+	loadTV('tv-news-mount','https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',{feedMode:'symbol',symbol,colorTheme:'dark',isTransparent:true,width:'100%',height:400,locale:'th'});
+}
+
+function go(symbol,label){
+	document.getElementById('hero-label').textContent=label||symbol;
+	document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.symbol===symbol));
+	refreshWidget(symbol);
+}
+
+function handleSearch(){
+	const v=document.getElementById('symbol-input').value.trim().toUpperCase();
+	if(v) go(v,v);
+}
+
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+	document.getElementById('symbol-input').value='';
+	go(c.dataset.symbol,c.dataset.label);
+});
+
+document.getElementById('symbol-input').onkeydown=e=>{if(e.key==='Enter')handleSearch()};
+refreshWidget('OANDA:XAUUSD');
+
+async function loadBackendData(){
+	try {
+		const res = await fetch('/api/dashboard-data');
+		if(!res.ok) throw new Error('Network error');
+		const data = await res.json();
+
+		// Price Update
+		document.getElementById('val-price').textContent = data.price;
+		const chgEl = document.getElementById('val-chg');
+		chgEl.textContent = data.change;
+		chgEl.className = data.change.startsWith('+') ? 'chg up' : 'chg down';
+		document.getElementById('val-time').textContent = data.updatedAt;
+
+		// Signal Box Update
+		document.getElementById('sig-action').textContent = data.signal.action;
+		document.getElementById('sig-detail').textContent = data.signal.detail;
+		const sigBadge = document.getElementById('sig-badge');
+		sigBadge.textContent = data.signal.badge.toUpperCase();
+		sigBadge.className = `sig-tag ${data.signal.badge}`;
+
+		// RSI Card
+		document.getElementById('val-rsi').textContent = data.rsi.value;
+		document.getElementById('desc-rsi').textContent = data.rsi.status;
+
+		// SMC Cards
+		document.getElementById('val-smc-zone').textContent = data.smc.zone.split(' ')[0];
+		document.getElementById('desc-smc-zone').textContent = data.smc.zone;
+
+		document.getElementById('val-smc-struct').textContent = data.smc.structure.split(' ')[0];
+		document.getElementById('desc-smc-struct').textContent = `Order Block: ${data.smc.orderBlock}`;
+
+		// News List
+		const newsContainer = document.getElementById('ai-news-list');
+		newsContainer.innerHTML = '';
+		if(data.news.length === 0){
+			newsContainer.innerHTML = '<div class="news-state">ไม่มีข้อมูลข่าวในขณะนี้</div>';
+			return;
+		}
+		data.news.forEach(item => {
+			const a = document.createElement('a');
+			a.className = 'news-item';
+			a.href = item.link;
+			a.target = '_blank';
+			const s = ['positive','negative','neutral'].includes(item.sentiment) ? item.sentiment : 'neutral';
+			const labelMap = {positive:'บวก', negative:'ลบ', neutral:'กลาง'};
+			a.innerHTML = `<span class="badge ${s}">${labelMap[s]}</span><div><div class="n-title"></div><div class="n-reason"></div></div>`;
+			a.querySelector('.n-title').textContent = item.title;
+			a.querySelector('.n-reason').textContent = item.reason;
+			newsContainer.appendChild(a);
+		});
+
+	} catch(e) {
+		console.error('Fetch error:', e);
+		document.getElementById('sig-action').textContent = 'ระบบทำงานแบบออฟไลน์ (Demo Mode)';
+	}
+}
+
+loadBackendData();
+setInterval(loadBackendData, 60000); // อัปเดตทุกๆ 1 นาที
+</script>
 </body>
 </html>
